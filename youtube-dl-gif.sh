@@ -85,9 +85,10 @@ if [[ ! $? = 0 ]]; then
 	exit 1
 elif [[ ! -f $NAME.gif ]]; then
 	echo -n "Separating video into frames ..."
+	mkdir youtube-dl-gif-frames
+	[[ $? = 0 ]] || exit 1
 	echo -e "\nSeparation:\n" >> youtube-dl-gif.log
-	mkdir frames
-	ffmpeg -i $NAME.mp4 -vf scale=480:-1:flags=lanczos,fps=10 ./frames/ffout%03d.png &>> youtube-dl-gif.log
+	ffmpeg -i $NAME.mp4 -vf scale=480:-1:flags=lanczos,fps=10 ./youtube-dl-gif-frames/ffout%03d.png &>> youtube-dl-gif.log
 
 	if [[ ! $? = 0 ]]; then
 		>&2 echo -e "youtube-dl-gif: video separation failed\n\nlog written to youtube-dl-gif.log"
@@ -97,14 +98,14 @@ elif [[ ! -f $NAME.gif ]]; then
 	echo -en "done\nCombining frames into GIF ..."
 
 	if [[ $CAPTION ]]; then
-		magick -loop 0 ./frames/ffout*.png -font $FONT -pointsize $FONT_SIZE -fill white -stroke black -strokewidth 2 -gravity south -annotate 0 "$CAPTION" $NAME.gif
+		magick -loop 0 ./youtube-dl-gif-frames/ffout*.png -font $FONT -pointsize $FONT_SIZE -fill white -stroke black -strokewidth 2 -gravity south -annotate 0 "$CAPTION" $NAME.gif
 	else
-		magick -loop 0 ./frames/ffout*.png $NAME.gif
+		magick -loop 0 ./youtube-dl-gif-frames/ffout*.png $NAME.gif
 	fi
 
 	echo "done"
 	echo -n "Cleaning up ..."
-	rm -r --interactive=none frames $NAME.mp4 youtube-dl-gif.log
+	rm -r --interactive=none youtube-dl-gif-frames $NAME.mp4 youtube-dl-gif.log
 	echo "done"
 else
 	>&2 echo -e "youtube-dl-gif: $NAME.gif already exists in working directory"
