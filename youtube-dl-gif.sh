@@ -25,7 +25,7 @@ while getopts ":hc:l:n:s:" opt; do
 			if [[ $(echo "$OPTARG" | grep -P $duration_pattern) ]]; then
 				LENGTH="$OPTARG"
 			elif [[ $OPTARG ]]; then
-				>&2 echo -e "'$OPTARG' is not a duration\n$USAGE"
+				>&2 echo -e "youtube-dl-gif: invalid duration -- '$OPTARG'\n$USAGE"
 				exit 1
 			fi
 			;;
@@ -36,7 +36,7 @@ while getopts ":hc:l:n:s:" opt; do
 			if [[ $(echo "$OPTARG" | grep -P $duration_pattern) ]]; then
 				START="$OPTARG"
 			elif [[ $OPTARG ]]; then
-				>&2 echo -e "'$OPTARG' is not a timestamp\n$USAGE"
+				>&2 echo -e "youtube-dl-gif: invalid timestamp -- '$OPTARG'\n$USAGE"
 				exit 1
 			fi
 			;;
@@ -55,7 +55,7 @@ shift $((OPTIND-1))
 if [[ $@ ]]; then
 	URL=$@
 else
-	>&2 echo -e "youtube-dl-gif: a URL is required\n$USAGE"
+	>&2 echo -e "youtube-dl-gif: no url provided\n$USAGE"
 	exit 1
 fi
 
@@ -63,25 +63,38 @@ url_regex='(https?|ftp|file)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=
 
 # Check URL validity
 if [[ ! $URL =~ $url_regex ]]; then
-	>&2 echo "youtube-dl-gif: argument must be a url\n$USAGE"
+	>&2 echo "youtube-dl-gif: argument is not valid url -- '$OPTARG'\n$USAGE"
 	exit 1
 fi
 
 # Convert clip to mp4
 if [ ! -f $NAME.mp4 ]; then
-	ffmpeg -ss $START -t $LENGTH -i $(youtube-dl -f 18 --get-url $URL) -c:v copy -c:a copy $NAME.mp4
+	echo -n "Converting YouTube clip ..."
+	echo -e "Conversion:\n" > youtube-dl-gif.log
+	ffmpeg -ss $START -t $LENGTH -i $(youtube-dl -f 18 --get-url $URL) -c:v copy -c:a copy $NAME.mp4 &>> youtube-dl-gif.log
+	echo "done"
 else
 	>&2 echo -e "youtube-dl-gif: $NAME.mp4 already exists in working directory"
+	rm --interactive=none youtube-dl-gif.log
 	exit 1
 fi
 
 # Create gif
 if [[ ! $? = 0 ]]; then
-	>&2 echo -e "youtube-dl-gif: video conversion failed"
+	>&2 echo -e "youtube-dl-gif: video conversion failed\n\nlog written to youtube-dl-gif.log"
 	exit 1
 elif [[ ! -f $NAME.gif ]]; then
+	echo -n "Separating video into frames ..."
+	echo -e "\nSeparation:\n" >> youtube-dl-gif.log
 	mkdir frames
-	ffmpeg -i $NAME.mp4 -vf scale=480:-1:flags=lanczos,fps=10 ./frames/ffout%03d.png
+	ffmpeg -i $NAME.mp4 -vf scale=480:-1:flags=lanczos,fps=10 ./frames/ffout%03d.png &>> youtube-dl-gif.log
+
+	if [[ ! $? = 0 ]]; then
+		>&2 echo -e "youtube-dl-gif: video separation failed\n\nlog written to youtube-dl-gif.log"
+		exit 1
+	fi
+
+	echo -en "done\nCombining frames into GIF ..."
 
 	if [[ $CAPTION ]]; then
 		magick -loop 0 ./frames/ffout*.png -font $FONT -pointsize $FONT_SIZE -fill white -stroke black -strokewidth 2 -gravity south -annotate 0 "$CAPTION" $NAME.gif
@@ -89,9 +102,12 @@ elif [[ ! -f $NAME.gif ]]; then
 		magick -loop 0 ./frames/ffout*.png $NAME.gif
 	fi
 
-	rm -r --interactive=none frames $NAME.mp4
+	echo "done"
+	echo -n "Cleaning up ..."
+	rm -r --interactive=none frames $NAME.mp4 youtube-dl-gif.log
+	echo "done"
 else
 	>&2 echo -e "youtube-dl-gif: $NAME.gif already exists in working directory"
-	rm --interactive=none $NAME.mp4
+	rm --interactive=none $NAME.mp4 youtube-dl-gif.log
 	exit 1
 fi
