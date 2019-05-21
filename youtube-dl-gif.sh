@@ -1,7 +1,7 @@
 #! /bin/sh
 
 # Set variables
-USAGE="usage: youtube-dl-gif [-h|-c<caption>|-l<length>|-s<start time>] URL"
+USAGE="usage: youtube-dl-gif [-h|-c<caption>|-l<length>|-s<start time>] URL\n\n       <length> and <start time> should be formatted ##:##:##.###\n       where each section is optional except seconds"
 START=0
 LENGTH=10
 NAME="youtube_gif"
@@ -25,7 +25,7 @@ while getopts ":hc:l:n:s:" opt; do
 			if [[ $(echo "$OPTARG" | grep -P $duration_pattern) ]]; then
 				LENGTH="$OPTARG"
 			elif [[ $OPTARG ]]; then
-				>&2 echo -e "'$OPTARG' is not a timestamp\n$USAGE"
+				>&2 echo -e "'$OPTARG' is not a duration\n$USAGE"
 				exit 1
 			fi
 			;;
