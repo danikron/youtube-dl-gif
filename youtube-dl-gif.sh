@@ -109,6 +109,6 @@ elif [[ ! -f $NAME.gif ]]; then
 	echo "done"
 else
 	>&2 echo -e "youtube-dl-gif: $NAME.gif already exists in working directory"
-	rm --interactive=none youtube-dl-gif-frames $NAME.mp4 youtube-dl-gif.log
+	rm -r --interactive=none youtube-dl-gif-frames $NAME.mp4 youtube-dl-gif.log
 	exit 1
 fi
