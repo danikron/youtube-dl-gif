@@ -6,7 +6,7 @@ START=0
 LENGTH=5
 NAME="youtube_gif"
 FONT="Source-Sans-Pro-Bold"
-FONT_SIZE=35
+FONT_POINTSIZE=35
 
 duration_pattern='^(?:(?:([01]?\d|2[0-3]):)?([0-5]?\d):)?([0-5]?\d)(?:\.(\d+))?$'
 
@@ -98,7 +98,7 @@ elif [[ ! -f $NAME.gif ]]; then
 	echo -en "done\nCombining frames into GIF ..."
 
 	if [[ $CAPTION ]]; then
-		magick -loop 0 ./youtube-dl-gif-frames/ffout*.png -font $FONT -pointsize $FONT_SIZE -fill white -stroke black -strokewidth 2 -gravity south -annotate 0 "$CAPTION" $NAME.gif
+		magick -loop 0 ./youtube-dl-gif-frames/ffout*.png -font $FONT -pointsize $FONT_POINTSIZE -fill white -stroke black -strokewidth 2 -gravity south -annotate 0 "$CAPTION" $NAME.gif
 	else
 		magick -loop 0 ./youtube-dl-gif-frames/ffout*.png $NAME.gif
 	fi
