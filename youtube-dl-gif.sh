@@ -3,7 +3,7 @@
 # Set variables
 USAGE="usage: youtube-dl-gif [-h|-c<caption>|-l<length>|-s<start time>] URL\n\n       <length> and <start time> should be formatted ##:##:##.###\n       where each section is optional except seconds"
 START=0
-LENGTH=10
+LENGTH=5
 NAME="youtube_gif"
 FONT="Source-Sans-Pro-Bold"
 FONT_SIZE=35
